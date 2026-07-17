@@ -1,7 +1,5 @@
 [README.md](https://github.com/user-attachments/files/30142489/README.md)
-# CF Newborn Screening — State Workflow Tree
-
-**[View the tree →](https://klanaghen.github.io/REPO-NAME/)**
+# CF Newborn Screening — State Workflow 
 
 An interactive map of how all 51 U.S. cystic fibrosis newborn screening programs move an infant from the first IRT blood spot through to a sweat-test referral.
 
