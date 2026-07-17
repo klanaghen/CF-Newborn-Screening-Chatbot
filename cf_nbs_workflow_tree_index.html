@@ -1,0 +1,1823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CF NBS Workflow Tree</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0f18;--surf:#141824;--border:#252d42;--muted:#5a6480;
+  --ip1b:#10b981;--ip1t:#6ee7b7;--ip1bg:#091a0f;
+  --ip2b:#3b82f6;--ip2t:#93c5fd;--ip2bg:#0e1828;
+  --ip3b:#d946ef;--ip3t:#f0abfc;--ip3bg:#170d1e;
+}
+html,body{background:var(--bg);color:#e2e8f0;font-family:'IBM Plex Sans',sans-serif;min-height:100vh;padding:18px 20px 40px}
+h1{font-size:17px;font-weight:700;color:#f1f5f9;margin-bottom:2px}
+.sub{font-size:10.5px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-bottom:12px}
+
+.fw{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.fwc{flex:1;min-width:180px;padding:9px 13px;border-radius:9px;border:1.5px solid}
+.fwc .fn{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;font-family:'IBM Plex Mono',monospace;margin-bottom:2px}
+.fwc .ft{font-size:11.5px;font-weight:700;margin-bottom:2px}
+.fwc .fd{font-size:10px;opacity:.85;line-height:1.4}
+
+.leg{display:flex;gap:6px;flex-wrap:wrap;padding:9px 12px;background:var(--surf);border:1px solid var(--border);border-radius:9px;margin-bottom:10px;align-items:center}
+.lsep{width:1px;background:var(--border);align-self:stretch;margin:0 4px}
+.ll{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;white-space:nowrap}
+.chip{font-size:10px;font-weight:600;padding:2px 9px;border-radius:99px;border:1.5px solid;white-space:nowrap}
+
+.frow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.flbl{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.fb{font-family:'IBM Plex Sans',sans-serif;font-size:10px;font-weight:600;padding:3px 10px;border-radius:6px;border:1.5px solid var(--border);background:var(--surf);color:var(--muted);cursor:pointer;transition:all .15s}
+.fb:hover{border-color:#3b82f6;color:#3b82f6}
+.fb.on{background:#3b82f6;border-color:#3b82f6;color:#0c0f18}
+
+#wrap{background:var(--surf);border:1px solid var(--border);border-radius:11px;padding:20px 14px;overflow:auto}
+svg{display:block}
+
+#tt{position:fixed;background:#1a2035;border:1px solid #252d42;border-radius:10px;padding:13px 16px;pointer-events:none;display:none;z-index:9999;width:320px;box-shadow:0 8px 32px rgba(0,0,0,.7);line-height:1.5;font-size:11.5px}
+.ts{font-size:20px;font-weight:700;color:#f1f5f9;margin-bottom:2px;font-family:'IBM Plex Mono',monospace}
+.tsub{font-size:10px;color:var(--muted);margin-bottom:8px;font-family:'IBM Plex Mono',monospace}
+.td{border:none;border-top:1px solid #252d42;margin:7px 0}
+.tip{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;margin-bottom:3px;font-family:'IBM Plex Mono',monospace}
+.tr{display:flex;gap:6px;margin-bottom:3px}
+.tk{color:var(--muted);font-size:10.5px;flex-shrink:0;width:90px}
+.tv{font-weight:500;font-size:10.5px;color:#e2e8f0;flex:1}
+.tehr{font-size:10px;color:#fbbf24;font-style:italic;margin-top:5px;line-height:1.4;padding:5px 8px;background:#1c1608;border-radius:5px;border-left:2px solid #d97706}
+.tb{display:inline-block;padding:2px 7px;border-radius:99px;font-size:9px;font-weight:700;margin:2px 2px 0;border:1px solid}
+.tsrc{margin-top:7px;font-size:9.5px;padding:5px 8px;border-radius:5px;border-left:2px solid;line-height:1.4}
+.tsrc a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+
+.defbox{background:var(--surf);border:1px solid var(--border);border-radius:9px;padding:11px 13px;margin-bottom:10px}
+.defhd{font-size:11px;font-weight:700;color:#e2e8f0;margin-bottom:8px}
+.defsrc{display:block;font-size:8.5px;font-weight:400;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-top:2px}
+.defgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:7px}
+.defcard{background:var(--bg);border:1.5px solid;border-radius:7px;padding:8px 10px}
+.deftag{font-size:10px;font-weight:700;margin-bottom:3px;font-family:'IBM Plex Mono',monospace}
+.deftx{font-size:9.7px;line-height:1.45;color:#cbd5e1}
+.deftx b{color:#f1f5f9}
+.defnote{font-size:10px;line-height:1.5;color:#fcd34d;background:#1c1608;border-left:2px solid #d97706;border-radius:5px;padding:7px 10px;margin-top:8px}
+.defnote b{color:#fde68a}
+.defnote code{font-family:'IBM Plex Mono',monospace;font-size:9px;background:#0c0f18;padding:1px 4px;border-radius:3px;color:#93c5fd}
+</style>
+</head>
+<body>
+<h1>CF NBS Workflow Tree</h1>
+<p class="sub">51 states · v7 — DNA panel categories (A–D) corrected &amp; sourced · source: 2025 CF NBS State Algorithm Data (Marci/Yvonne → K. Eilbeck) · hover any state pill for detail</p>
+
+<div class="fw">
+  <div class="fwc" style="background:var(--ip1bg);border-color:var(--ip1b)">
+    <div class="fn" style="color:var(--ip1t)">Intervention Point 1</div>
+    <div class="ft" style="color:var(--ip1t)">Elevated IRT result</div>
+    <div class="fd" style="color:var(--ip1t)">Communication when all testing complete — ideally first week of life. Primary communicator: pediatrician/PCP. EHR may show partial results before family is informed.</div>
+  </div>
+  <div class="fwc" style="background:var(--ip2bg);border-color:var(--ip2b)">
+    <div class="fn" style="color:var(--ip2t)">Intervention Point 2</div>
+    <div class="ft" style="color:var(--ip2t)">DNA panel result</div>
+    <div class="fd" style="color:var(--ip2t)">PCP informs family of variant result and next steps. PCP provides CF center contact and orders sweat test. Some states also notify CF center directly.</div>
+  </div>
+  <div class="fwc" style="background:var(--ip3bg);border-color:var(--ip3b)">
+    <div class="fn" style="color:var(--ip3t)">Intervention Point 3</div>
+    <div class="ft" style="color:var(--ip3t)">Sweat test scheduled</div>
+    <div class="fd" style="color:var(--ip3t)">PCP refers to CF center for sweat test. Standard: ≥1 variant. Some states (CA, NY, FL, others) only refer with ≥2 variants.</div>
+  </div>
+</div>
+
+<div class="leg">
+  <span class="ll">Workflow</span>
+  <span class="chip" style="background:#0f1e2a;border-color:#06b6d4;color:#67e8f9">IRT→IRT→DNA (2 samples)</span>
+  <span class="chip" style="background:#0f1a0a;border-color:#10b981;color:#6ee7b7">IRT→DNA (1 sample)</span>
+  <div class="lsep"></div>
+  <span class="ll">DNA Panel (source groups A–D)</span>
+  <span class="chip" style="background:#1c2a1c;border-color:#4ade80;color:#86efac">D · Panel 39–75</span>
+  <span class="chip" style="background:#1c2535;border-color:#38bdf8;color:#7dd3fc">C · NGS Panel</span>
+  <span class="chip" style="background:#2a2010;border-color:#fb923c;color:#fdba74">B · Panel→Seq</span>
+  <span class="chip" style="background:#251535;border-color:#c084fc;color:#e9d5ff">A · CFTR2(+)</span>
+  <div class="lsep"></div>
+  <span class="ll">Sweat trigger</span>
+  <span class="chip" style="background:#0f2920;border-color:#10b981;color:#6ee7b7">≥1 variant</span>
+  <span class="chip" style="background:#2a1010;border-color:#f87171;color:#fecaca">≥2 variants</span>
+  <span class="chip" style="background:#251a08;border-color:#d97706;color:#fcd34d">not specified</span>
+  <div class="lsep"></div>
+  <span class="ll">Pill indicators</span>
+  <span class="chip" style="background:#1a1535;border-color:#818cf8;color:#c7d2fe">◆ CF center notified</span>
+  <span class="chip" style="background:#0f1e2a;border-color:#06b6d4;color:#67e8f9">● 2nd IRT</span>
+  <div class="lsep"></div>
+  <span class="ll">Source tier</span>
+  <span class="chip" style="background:#141824;border-color:#475569;color:#94a3b8">■ Marci/Yvonne spreadsheet</span>
+  <span class="chip" style="background:#1a1f10;border-color:#84cc16;color:#bef264">★ Marci expert comm.</span>
+  <span class="chip" style="background:#10181a;border-color:#22d3ee;color:#67e8f9">🔗 Web-verified</span>
+  <span class="chip" style="background:#1a1208;border-color:#d97706;color:#fcd34d">⚠ Unverified</span>
+</div>
+
+<div class="defbox">
+  <div class="defhd">DNA panel categories — how the four differ <span class="defsrc">source: 2025 CF NBS State Algorithm Data (Marci/Yvonne → K. Eilbeck) · "CFTR panel category" column + "Panel Map" sheet</span></div>
+  <div class="defgrid">
+    <div class="defcard" style="border-color:#4ade80">
+      <div class="deftag" style="color:#86efac">D · CFTR Panel, 39–75 variants</div>
+      <div class="deftx">Fixed panel on standard (non-sequencing) chemistry. Reports only the panel's variants. Largest group.</div>
+    </div>
+    <div class="defcard" style="border-color:#38bdf8">
+      <div class="deftag" style="color:#7dd3fc">C · NGS Panel</div>
+      <div class="deftx">A CFTR panel run by next-generation sequencing (NGS), but only a <b>predefined list</b> is ever reported — no novel or VUS/VVCC variants. Tiered programs live here too: <b>DE &amp; PA</b> run a 43-variant Revvity screen and report from a 338-variant Revvity list — larger, but still a fixed list.</div>
+    </div>
+    <div class="defcard" style="border-color:#fb923c">
+      <div class="deftag" style="color:#fdba74">B · Panel → Sequencing</div>
+      <div class="deftx">First-tier panel <b>reflexes to true CFTR sequencing</b> that can report <b>novel + interpreted</b> variants (CFTR2, VUS, VVCC). CA, CT, FL, MD, TN.</div>
+    </div>
+    <div class="defcard" style="border-color:#c084fc">
+      <div class="deftag" style="color:#e9d5ff">A · CFTR2 (+)</div>
+      <div class="deftx">Full CFTR sequencing interpreted against the CFTR2 database (≈978–1100 variants). KS, MT, NY, OH, VA, WI.</div>
+    </div>
+  </div>
+  <div class="defnote"><b>PA vs FL —</b> both are tiered (a smaller panel runs first). The source separates them by <b>what the second tier can report</b>: FL reflexes to open sequencing that reports novel / VUS / VVCC variants (group&nbsp;B), while PA's second tier is a larger but still <b>fixed</b> 338-variant list (group&nbsp;C). The source "Panel Map" keeps PA in C. To reclassify PA, edit its <code>pcat_short</code> / <code>cluster</code> / <code>panel_group</code> in the <code>STATES</code> data — see the how-to-edit notes.</div>
+</div>
+
+<div class="frow">
+  <span class="flbl">Highlight:</span>
+  <button class="fb on" data-f="all">All</button>
+  <button class="fb" data-f="2irt">2 IRT samples</button>
+  <button class="fb" data-f="s1">Sweat ≥1 variant</button>
+  <button class="fb" data-f="s2">Sweat ≥2 variants</button>
+  <button class="fb" data-f="cftr2">CFTR2(+)</button>
+  <button class="fb" data-f="ngs">NGS Panel</button>
+  <button class="fb" data-f="pseq">Panel→Seq</button>
+  <button class="fb" data-f="cfcenter">CF center notified</button>
+  <button class="fb" data-f="ns">Sweat N/S</button>
+  <button class="fb" data-f="verified">Web-verified only</button>
+</div>
+
+<div id="wrap"><svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg></div>
+<div id="tt"></div>
+
+<script>
+const STATES = [
+  {
+    "abbr": "AK",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 58)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex39, 39 variants)\nSent to external lab: IA",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test trigger: reported as ≥1 variant (Marci, expert communication 2025) — awaiting primary source verification",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "AL",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 96%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex39, 39 variants)",
+    "vhirt_note": "VHIRT threshold: 170",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test trigger: reported as ≥1 variant (Marci, expert communication 2025) — awaiting primary source verification",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "AR",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 100)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex60, 60 variants)",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test trigger: reported as ≥1 variant (Marci, expert communication 2025) — awaiting primary source verification",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "AZ",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 97.8%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex60, 60 variants)",
+    "vhirt_note": "VHIRT threshold: 99.9",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test trigger: reported as ≥1 variant (Marci, expert communication 2025) — awaiting primary source verification",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "CA",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 69)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (CA Panel, 77 variants) → reflex sequencing if ≥1 variant found",
+    "vhirt_note": "",
+    "sweat": "Sweat test: only infants with ≥2 variants",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: 1 variant on panel + pending sequencing may appear before final result. Family may see partial result in EHR.",
+    "pcat": "Panel → Sequencing",
+    "one_var_sw": "No",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel→Seq",
+    "sweat_key": "2var",
+    "cluster": "1|Panel→Seq|2var",
+    "source_tier": 0,
+    "source_label": "2025 CF NBS State Algorithm Data (Marci/Yvonne → K. Eilbeck)",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "All fields sourced from Marci/Yvonne algorithm spreadsheet",
+    "panel_group": "B",
+    "reports": "All VUS/VVCC — novel variants reported"
+  },
+  {
+    "abbr": "CO",
+    "samples": 2,
+    "archetype": "IRT → IRT → DNA",
+    "irt_desc": "Sample 1 at 24–48h (cutoff 96%ile); Sample 2 at well-baby check (7–14 days)",
+    "dna_blood": "DNA tested on 2nd blood spot",
+    "dna_desc": "CO NGS Panel (153 variants) — uses sequencing technology; reports panel variants only",
+    "vhirt_note": "VHIRT threshold: 100",
+    "sweat": "Sweat test: all infants with ≥1 variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before 2nd sample or DNA result. No action needed until all testing complete.",
+    "pcat": "Panel using sequencing technology",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "NGS Panel",
+    "sweat_key": "1var",
+    "cluster": "2|NGS Panel|1var",
+    "source_tier": 0,
+    "source_label": "2025 CF NBS State Algorithm Data (Marci/Yvonne → K. Eilbeck)",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "All fields sourced from Marci/Yvonne algorithm spreadsheet",
+    "panel_group": "C",
+    "reports": "Panel variants only — 153-variant list"
+  },
+  {
+    "abbr": "CT",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 55)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex60, 60 variants) → reflex sequencing if ≥1 variant found\nSent to external lab: WI",
+    "vhirt_note": "VHIRT threshold: 150",
+    "sweat": "Sweat test: all infants with ≥1 variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: 1 variant on panel + pending sequencing may appear before final result. Family may see partial result in EHR.",
+    "pcat": "Panel → Sequencing",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel→Seq",
+    "sweat_key": "1var",
+    "cluster": "1|Panel→Seq|1var",
+    "source_tier": 0,
+    "source_label": "2025 CF NBS State Algorithm Data (Marci/Yvonne → K. Eilbeck)",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "All fields sourced from Marci/Yvonne algorithm spreadsheet",
+    "panel_group": "B",
+    "reports": "CFTR2 via Wisconsin — novel variants reported"
+  },
+  {
+    "abbr": "DC",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 98.8%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex39+4, 43 variants)\nSent to external lab: Revvity",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nCF center notification: unknown",
+    "sweat_sched": "Sweat test trigger: reported as ≥1 variant (Marci, expert communication 2025) — awaiting primary source verification",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Unknown",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "Unknown",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "DE",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 96%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Revvity: 43-variant panel → 338 variants reported (read on sequencing technology; predefined list only)\nSent to external lab: Revvity",
+    "vhirt_note": "VHIRT bypass exists (cutoff not specified)",
+    "sweat": "Sweat test: only infants with ≥2 variants",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "Panel using sequencing technology",
+    "one_var_sw": "No",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "NGS Panel",
+    "sweat_key": "2var",
+    "cluster": "1|NGS Panel|2var",
+    "source_tier": 0,
+    "source_label": "2025 CF NBS State Algorithm Data (Marci/Yvonne → K. Eilbeck)",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "All fields sourced from Marci/Yvonne algorithm spreadsheet",
+    "panel_group": "C",
+    "reports": "338-variant Revvity list only (43-variant base screen)"
+  },
+  {
+    "abbr": "FL",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 50)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Agena74, 74 variants) → reflex sequencing if ≥1 variant found",
+    "vhirt_note": "VHIRT threshold: 160",
+    "sweat": "Sweat test: only infants with ≥2 variants",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: 1 variant on panel + pending sequencing may appear before final result. Family may see partial result in EHR.",
+    "pcat": "Panel → Sequencing",
+    "one_var_sw": "No",
+    "both_notified": "Yes",
+    "notify_explain": "1-variant carriers called to PCPs as carriers",
+    "pcat_short": "Panel→Seq",
+    "sweat_key": "2var",
+    "cluster": "1|Panel→Seq|2var",
+    "source_tier": 0,
+    "source_label": "2025 CF NBS State Algorithm Data (Marci/Yvonne → K. Eilbeck)",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist — 1-variant infants called as carriers to PCPs only",
+    "source_note": "All fields sourced from Marci/Yvonne algorithm spreadsheet",
+    "panel_group": "B",
+    "reports": "CFTR2 + all VUS/VVCC — novel variants reported"
+  },
+  {
+    "abbr": "GA",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 55)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex39, 39 variants)",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral. Source: PMC12551103 and PMC12551088 (peer-reviewed, 2025) — Georgia algorithm explicitly described",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 2,
+    "source_label": "PMC12551103 + PMC12551088 (2025)",
+    "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12551103/",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — web-verified primary source",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "HI",
+    "samples": 2,
+    "archetype": "IRT → IRT → DNA",
+    "irt_desc": "Sample 1 at 24–48h (cutoff age-adj); Sample 2 at well-baby check (7–14 days)",
+    "dna_blood": "DNA tested on 2nd blood spot",
+    "dna_desc": "Panel (WA Panel, 41 variants)\nSent to external lab: WA",
+    "vhirt_note": "VHIRT threshold: >200",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP only\nCF center: NOT always notified\nNote: PCPs only notified regardless of variant count",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center. Source: Marci (expert communication, 2025)",
+    "ehr_note": "EHR challenge: elevated IRT may appear before 2nd sample or DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "No",
+    "notify_explain": "PCPs only notified regardless of variant count",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "2|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025)",
+    "source_url": "",
+    "notify_full": "PCP only — PCPs are the only ones notified regardless of variant count",
+    "source_note": "Sweat test trigger — expert communication",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "IA",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 58)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex39, 39 variants)",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "ID",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff age-adj)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (WA Panel, 41 variants)\nSent to external lab: WA",
+    "vhirt_note": "VHIRT threshold: >200",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "IL",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 96%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Illinois, 72 variants)",
+    "vhirt_note": "VHIRT threshold: 170",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP only\nCF center: NOT always notified\nNote: PCPs only notified regardless of variant count",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "No",
+    "notify_explain": "PCPs only notified regardless of variant count",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "PCP only — PCPs are the only ones notified regardless of variant count",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "IN",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 96%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex39+4, 43 variants)",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 2,
+    "source_label": "PubMed 33512069 — Indiana study (Pediatric Pulmonology, 2021)",
+    "source_url": "https://pubmed.ncbi.nlm.nih.gov/33512069/",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — web-verified primary source",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "KS",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 60)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "CFTR2(+) full sequencing — 978 interpreted variants (CFTR2/Sequencing)\nSent to external lab: WI",
+    "vhirt_note": "VHIRT threshold: 170",
+    "sweat": "Sweat test: all infants with ≥1 variant",
+    "who": "Primary: Pediatrician/PCP only\nCF center: NOT always notified\nNote: CF Center notified for 2 variants; PCP only for 1 variant",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR2 (+)",
+    "one_var_sw": "Yes",
+    "both_notified": "No",
+    "notify_explain": "CF Center notified for 2 variants; PCP only for 1 variant",
+    "pcat_short": "CFTR2(+)",
+    "sweat_key": "1var",
+    "cluster": "1|CFTR2(+)|1var",
+    "source_tier": 0,
+    "source_label": "2025 CF NBS State Algorithm Data (Marci/Yvonne → K. Eilbeck)",
+    "source_url": "",
+    "notify_full": "CF center notified for 2 variants only — PCP/hospital only for 1 variant",
+    "source_note": "All fields sourced from Marci/Yvonne algorithm spreadsheet",
+    "panel_group": "A",
+    "reports": "CFTR2-interpreted variants (978)"
+  },
+  {
+    "abbr": "KY",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 58)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Illumina139 panel (139 variants) — uses sequencing technology; reports panel variants only",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "Panel using sequencing technology",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "NGS Panel",
+    "sweat_key": "1var",
+    "cluster": "1|NGS Panel|1var",
+    "source_tier": 0,
+    "source_label": "2025 CF NBS State Algorithm Data (Marci/Yvonne → K. Eilbeck)",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "All fields sourced from Marci/Yvonne algorithm spreadsheet",
+    "panel_group": "C",
+    "reports": "Panel variants only — 139-variant list"
+  },
+  {
+    "abbr": "LA",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 60)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex60, 60 variants)",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "MA",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 95%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex39, 39 variants)\nSent to external lab: New England NBS",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "MD",
+    "samples": 2,
+    "archetype": "IRT → IRT → DNA",
+    "irt_desc": "Sample 1 at 24–48h (cutoff 55); Sample 2 at well-baby check (7–14 days)",
+    "dna_blood": "DNA tested on 2nd blood spot",
+    "dna_desc": "Panel (Luminex60, 60 variants) → reflex sequencing if ≥1 variant found\nSent to external lab: WI",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 variant",
+    "who": "Primary: Pediatrician/PCP only\nCF center: NOT always notified\nNote: CF Center notified for 2 variants; PCP only for 1 variant",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before 2nd sample or DNA result. No action needed until all testing complete.",
+    "pcat": "Panel → Sequencing",
+    "one_var_sw": "Yes",
+    "both_notified": "No",
+    "notify_explain": "CF Center notified for 2 variants; PCP only for 1 variant",
+    "pcat_short": "Panel→Seq",
+    "sweat_key": "1var",
+    "cluster": "2|Panel→Seq|1var",
+    "source_tier": 0,
+    "source_label": "2025 CF NBS State Algorithm Data (Marci/Yvonne → K. Eilbeck)",
+    "source_url": "",
+    "notify_full": "CF center notified for 2 variants only — PCP/hospital only for 1 variant",
+    "source_note": "All fields sourced from Marci/Yvonne algorithm spreadsheet",
+    "panel_group": "B",
+    "reports": "Panel variants only (0–1 variant cases reflex to CFTR sequencing at WI)"
+  },
+  {
+    "abbr": "ME",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 95%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex39, 39 variants)\nSent to external lab: New England NBS",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "MI",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 96%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Illumina139 panel (139 variants) — uses sequencing technology; reports panel variants only",
+    "vhirt_note": "VHIRT threshold: 99.9%ile",
+    "sweat": "Sweat test: all infants with ≥1 variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "Panel using sequencing technology",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "Letter to parents & PCP at VHIRT if no mutations; watch for symptoms",
+    "pcat_short": "NGS Panel",
+    "sweat_key": "1var",
+    "cluster": "1|NGS Panel|1var",
+    "source_tier": 0,
+    "source_label": "2025 CF NBS State Algorithm Data (Marci/Yvonne → K. Eilbeck)",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "All fields sourced from Marci/Yvonne algorithm spreadsheet",
+    "panel_group": "C",
+    "reports": "Panel variants only — 139-variant list"
+  },
+  {
+    "abbr": "MN",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 96%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex39+4, 43 variants)",
+    "vhirt_note": "VHIRT threshold: ≥120 ng/mL → borderline; repeat NBS within 1 week; if still elevated → sweat test",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 2,
+    "source_label": "Minnesota DPH provider fact sheet (health.state.mn.us)",
+    "source_url": "https://www.health.mn.gov/people/newbornscreening/materials/factsheets/cf1variantprovider.pdf",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — web-verified primary source",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "MO",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 55)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex39, 39 variants)",
+    "vhirt_note": "VHIRT threshold: ≥160 → sweat test; if no mutations, report notes IRT highly elevated",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "MS",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 90)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Revvity panel (43 variants) — uses sequencing technology; reports panel variants only",
+    "vhirt_note": "",
+    "sweat": "Sweat test: only infants with ≥2 variants",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "Panel using sequencing technology",
+    "one_var_sw": "No",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "NGS Panel",
+    "sweat_key": "2var",
+    "cluster": "1|NGS Panel|2var",
+    "source_tier": 0,
+    "source_label": "2025 CF NBS State Algorithm Data (Marci/Yvonne → K. Eilbeck)",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "All fields sourced from Marci/Yvonne algorithm spreadsheet",
+    "panel_group": "C",
+    "reports": "Panel variants only — 43-variant list"
+  },
+  {
+    "abbr": "MT",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 50)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "CFTR2(+) full sequencing — 978 interpreted variants (CFTR2/Sequencing)\nSent to external lab: WI",
+    "vhirt_note": "VHIRT threshold: >140 ng/mL (non-NICU, >28wk GA, >24h collection)",
+    "sweat": "Sweat test: all infants with ≥1 variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR2 (+)",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "CFTR2(+)",
+    "sweat_key": "1var",
+    "cluster": "1|CFTR2(+)|1var",
+    "source_tier": 0,
+    "source_label": "2025 CF NBS State Algorithm Data (Marci/Yvonne → K. Eilbeck)",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "All fields sourced from Marci/Yvonne algorithm spreadsheet",
+    "panel_group": "A",
+    "reports": "CFTR2-interpreted variants (978)"
+  },
+  {
+    "abbr": "NC",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 96%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Illumina139 panel (139 variants) — uses sequencing technology; reports panel variants only",
+    "vhirt_note": "VHIRT threshold: 140",
+    "sweat": "Sweat test: all infants with ≥1 variant",
+    "who": "Primary: Pediatrician/PCP only\nCF center: NOT always notified\nNote: CF Center notified for 2 variants; PCP only for 1 variant",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "Panel using sequencing technology",
+    "one_var_sw": "Yes",
+    "both_notified": "No",
+    "notify_explain": "CF Center notified for 2 variants; PCP only for 1 variant",
+    "pcat_short": "NGS Panel",
+    "sweat_key": "1var",
+    "cluster": "1|NGS Panel|1var",
+    "source_tier": 0,
+    "source_label": "2025 CF NBS State Algorithm Data (Marci/Yvonne → K. Eilbeck)",
+    "source_url": "",
+    "notify_full": "CF center notified for 2 variants only — PCP/hospital only for 1 variant",
+    "source_note": "All fields sourced from Marci/Yvonne algorithm spreadsheet",
+    "panel_group": "C",
+    "reports": "Panel variants only — 139-variant list"
+  },
+  {
+    "abbr": "ND",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 58)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex39, 39 variants)\nSent to external lab: IA",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "NE",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 98.8%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex39, 39 variants)",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nCF center notification: unknown",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Unknown",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "Unknown",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "NH",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 95%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex39, 39 variants)\nSent to external lab: New England NBS",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "NJ",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 70)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Illumina139 panel (139 variants) — uses sequencing technology; reports panel variants only",
+    "vhirt_note": "VHIRT threshold: 130",
+    "sweat": "Sweat test: all infants with ≥1 variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "Panel using sequencing technology",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "NGS Panel",
+    "sweat_key": "1var",
+    "cluster": "1|NGS Panel|1var",
+    "source_tier": 0,
+    "source_label": "2025 CF NBS State Algorithm Data (Marci/Yvonne → K. Eilbeck)",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "All fields sourced from Marci/Yvonne algorithm spreadsheet",
+    "panel_group": "C",
+    "reports": "Panel variants only — 139-variant list (working to unblind VCF)"
+  },
+  {
+    "abbr": "NM",
+    "samples": 2,
+    "archetype": "IRT → IRT → DNA",
+    "irt_desc": "Sample 1 at 24–48h (cutoff 96%ile); Sample 2 at well-baby check (7–14 days)",
+    "dna_blood": "DNA tested on 2nd blood spot",
+    "dna_desc": "Panel (Assuragen 65, 65 variants)\nSent to external lab: OR",
+    "vhirt_note": "VHIRT bypass exists (cutoff not specified)",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center. Source: Marci (expert communication, 2025)",
+    "ehr_note": "EHR challenge: elevated IRT may appear before 2nd sample or DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "2|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025)",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — expert communication",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "NV",
+    "samples": 2,
+    "archetype": "IRT → IRT → DNA",
+    "irt_desc": "Sample 1 at 24–48h (cutoff 90); Sample 2 at well-baby check (7–14 days)",
+    "dna_blood": "DNA tested on 2nd blood spot",
+    "dna_desc": "Panel (Luminex39+4, 43 variants)\nSent to external lab: Revvity",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center. Source: Marci (expert communication, 2025)",
+    "ehr_note": "EHR challenge: elevated IRT may appear before 2nd sample or DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "2|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025)",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — expert communication",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "NY",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 95%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "CFTR2(+) full sequencing — 1014 interpreted variants (CFTR2/Sequencing)",
+    "vhirt_note": "VHIRT bypass exists (cutoff not specified)",
+    "sweat": "Sweat test: only infants with ≥2 variants",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR2 (+)",
+    "one_var_sw": "No",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "CFTR2(+)",
+    "sweat_key": "2var",
+    "cluster": "1|CFTR2(+)|2var",
+    "source_tier": 2,
+    "source_label": "PubMed 26098992 — NY NBS Consortium (Genet Med, 2015)",
+    "source_url": "https://pubmed.ncbi.nlm.nih.gov/26098992/",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — web-verified primary source",
+    "panel_group": "A",
+    "reports": "All VUS/VVCC (1014)"
+  },
+  {
+    "abbr": "OH",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 65)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "CFTR2(+) full sequencing — 985+ interpreted variants (CFTR2/Sequencing)\nSent to external lab: WI",
+    "vhirt_note": "VHIRT threshold: 160",
+    "sweat": "Sweat test: all infants with ≥1 variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR2 (+)",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "CFTR2(+)",
+    "sweat_key": "1var",
+    "cluster": "1|CFTR2(+)|1var",
+    "source_tier": 0,
+    "source_label": "2025 CF NBS State Algorithm Data (Marci/Yvonne → K. Eilbeck)",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "All fields sourced from Marci/Yvonne algorithm spreadsheet",
+    "panel_group": "A",
+    "reports": "CFTR2-interpreted variants (985+)"
+  },
+  {
+    "abbr": "OK",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 57)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex39, 39 variants)",
+    "vhirt_note": "VHIRT threshold: IRT>100 no mutations → repeat; if repeat >100 → sweat test",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP only\nCF center: NOT always notified\nNote: CF Center notified for 2 variants; PCP only for 1 variant",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "No",
+    "notify_explain": "CF Center notified for 2 variants; PCP only for 1 variant",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "CF center notified for 2 variants only — PCP/hospital only for 1 variant",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "OR",
+    "samples": 2,
+    "archetype": "IRT → IRT → DNA",
+    "irt_desc": "Sample 1 at 24–48h (cutoff 96%ile); Sample 2 at well-baby check (7–14 days)",
+    "dna_blood": "DNA tested on 2nd blood spot",
+    "dna_desc": "Panel (Assuragen 65, 65 variants)",
+    "vhirt_note": "VHIRT threshold: IRT>160 on first sample → molecular assessment (65 variants); refer if 1 or 2 variants",
+    "sweat": "Sweat test: ≥1 variant OR VHIRT with no mutation found",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center. Source: Marci (expert communication, 2025) + spreadsheet notify field",
+    "ehr_note": "EHR challenge: elevated IRT may appear before 2nd sample or DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "2|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025)",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — expert communication",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "PA",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 96%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Revvity: 43-variant screen → 338 variants reported (read on sequencing technology; predefined list only, no novel/VUS variants)\nSent to external lab: Revvity",
+    "vhirt_note": "VHIRT threshold: 99.8%ile",
+    "sweat": "Sweat test: only infants with ≥2 variants",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "Panel using sequencing technology",
+    "one_var_sw": "No",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "NGS Panel",
+    "sweat_key": "2var",
+    "cluster": "1|NGS Panel|2var",
+    "source_tier": 0,
+    "source_label": "2025 CF NBS State Algorithm Data (Marci/Yvonne → K. Eilbeck)",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Panel structure — spreadsheet (43-variant base, 338 reported) + PA program expert communication (smaller screen first, then 338 list)",
+    "panel_group": "C",
+    "reports": "338-variant Revvity list only (43-variant base screen)"
+  },
+  {
+    "abbr": "RI",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 95%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex39, 39 variants)\nSent to external lab: New England NBS",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "SC",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 96%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex60, 60 variants)",
+    "vhirt_note": "VHIRT threshold: 170",
+    "sweat": "Sweat test: all infants with ≥1 variant",
+    "who": "Primary: Pediatrician/PCP only\nCF center: NOT always notified\nNote: CF Center notified for 2 variants; PCP only for 1 variant",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "No",
+    "notify_explain": "CF Center notified for 2 variants; PCP only for 1 variant",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 0,
+    "source_label": "2025 CF NBS State Algorithm Data (Marci/Yvonne → K. Eilbeck)",
+    "source_url": "",
+    "notify_full": "CF center notified for 2 variants only — PCP/hospital only for 1 variant",
+    "source_note": "All fields sourced from Marci/Yvonne algorithm spreadsheet",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "SD",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 55)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex39, 39 variants)\nSent to external lab: IA",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "TN",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 54)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex39, 39 variants) → reflex sequencing if ≥1 variant found\nSent to external lab: WI (soon)",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center. Source: Marci (expert communication, 2025)",
+    "ehr_note": "EHR challenge: 1 variant on panel + pending sequencing may appear before final result. Family may see partial result in EHR.",
+    "pcat": "Panel → Sequencing",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel→Seq",
+    "sweat_key": "1var",
+    "cluster": "1|Panel→Seq|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025)",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — expert communication",
+    "panel_group": "B",
+    "reports": "CFTR2 variants (reflex sequencing)"
+  },
+  {
+    "abbr": "TX",
+    "samples": 2,
+    "archetype": "IRT → IRT → DNA",
+    "irt_desc": "Sample 1 at 24–48h (cutoff 50/<6days; 46.5/>7days); Sample 2 at well-baby check (7–14 days)",
+    "dna_blood": "DNA tested on 2nd blood spot",
+    "dna_desc": "Panel (Luminex60, 60 variants)",
+    "vhirt_note": "VHIRT threshold: 150",
+    "sweat": "Sweat test: elevated IRT on 1 or 2 screens + ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral within 7 days. Source: Texas DSHS official result table (dshs.texas.gov, revised 2025)",
+    "ehr_note": "EHR challenge: elevated IRT may appear before 2nd sample or DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "CF Center: phone+fax for 2 variants; fax for 1 variant + elevated IRT 0 variants; PCP: notified for 1, 2 variants and elevated IRT 0 variants",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "2|Panel Only|1var",
+    "source_tier": 2,
+    "source_label": "Texas DSHS ACT sheet (dshs.texas.gov, rev. Sept 2025)",
+    "source_url": "https://www.dshs.texas.gov/sites/default/files/newborn/pdf/cystic-fibrosis-with-one-mutation-12-2025.pdf",
+    "notify_full": "Both PCP and CF specialist — CF center: phone+fax for 2 variants; fax for 1 variant + elevated IRT with 0 variants. PCP notified for all results.",
+    "source_note": "Sweat test trigger — web-verified primary source",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "UT",
+    "samples": 2,
+    "archetype": "IRT → IRT → DNA",
+    "irt_desc": "Sample 1 at 24–48h (cutoff 51 first; 42 second); Sample 2 at well-baby check (7–14 days)",
+    "dna_blood": "DNA tested on 2nd blood spot",
+    "dna_desc": "Panel (Luminex60, 60 variants)",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP only\nCF center: NOT always notified\nNote: CF Center notified for 2 variants; PCP only for 1 variant",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center. Source: CF_work_flow.pdf (Utah NBS internal document)",
+    "ehr_note": "EHR challenge: elevated IRT may appear before 2nd sample or DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "No",
+    "notify_explain": "CF Center notified for 2 variants; PCP only for 1 variant",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "2|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025)",
+    "source_url": "",
+    "notify_full": "CF center notified for 2 variants only — PCP/hospital only for 1 variant",
+    "source_note": "Sweat test trigger — expert communication",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "VA",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 96%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "CFTR2(+) full sequencing — 1100 (CFTR2+VVCC) interpreted variants (CFTR2/Sequencing)",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR2 (+)",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "CFTR2(+)",
+    "sweat_key": "1var",
+    "cluster": "1|CFTR2(+)|1var",
+    "source_tier": 0,
+    "source_label": "2025 CF NBS State Algorithm Data (Marci/Yvonne → K. Eilbeck)",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "All fields sourced from Marci/Yvonne algorithm spreadsheet",
+    "panel_group": "A",
+    "reports": "All VUS/VVCC (1100, CFTR2 + VVCC)"
+  },
+  {
+    "abbr": "VT",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 95%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex39, 39 variants)\nSent to external lab: New England NBS",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "WA",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff age-adj)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (WA Panel, 41 variants)",
+    "vhirt_note": "VHIRT threshold: >200",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "CF centers and PCPs notified of all abnormal screens",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist — revised so CF centers and PCPs notified of all abnormal screens",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "WI",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 96%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "CFTR2(+) full sequencing — 979 interpreted variants (CFTR2/Sequencing)",
+    "vhirt_note": "",
+    "sweat": "Sweat test: all infants with ≥1 variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR2 (+)",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "CFTR2(+)",
+    "sweat_key": "1var",
+    "cluster": "1|CFTR2(+)|1var",
+    "source_tier": 2,
+    "source_label": "PMC4802962 — Baker et al. WI NBS (Genet Med, 2016)",
+    "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4802962/",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — web-verified primary source",
+    "panel_group": "A",
+    "reports": "CFTR2-interpreted variants (979)"
+  },
+  {
+    "abbr": "WV",
+    "samples": 1,
+    "archetype": "IRT → DNA",
+    "irt_desc": "1 IRT sample at 24–48h (cutoff 95%ile)",
+    "dna_blood": "DNA tested on 1st blood spot",
+    "dna_desc": "Panel (Luminex60, 60 variants)",
+    "vhirt_note": "VHIRT threshold: 170",
+    "sweat": "Sweat test: all infants with ≥1 CFTR variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before DNA result. No action needed until all testing complete.",
+    "pcat": "CFTR Panel with 39-75 variants",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "Panel Only",
+    "sweat_key": "1var",
+    "cluster": "1|Panel Only|1var",
+    "source_tier": 1,
+    "source_label": "Marci (expert communication, 2025) — verified June 2025",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "Sweat test trigger — verified by Marci",
+    "panel_group": "D",
+    "reports": "Panel variants only"
+  },
+  {
+    "abbr": "WY",
+    "samples": 2,
+    "archetype": "IRT → IRT → DNA",
+    "irt_desc": "Sample 1 at 24–48h (cutoff 96%ile); Sample 2 at well-baby check (7–14 days)",
+    "dna_blood": "DNA tested on 2nd blood spot",
+    "dna_desc": "CO NGS Panel (153 variants) — uses sequencing technology; reports panel variants only",
+    "vhirt_note": "VHIRT threshold: 140",
+    "sweat": "Sweat test: all infants with ≥1 variant",
+    "who": "Primary: Pediatrician/PCP\nAlso notified: CF center",
+    "sweat_sched": "Sweat test scheduled by/through: PCP referral to CF center",
+    "ehr_note": "EHR challenge: elevated IRT may appear before 2nd sample or DNA result. No action needed until all testing complete.",
+    "pcat": "Panel using sequencing technology",
+    "one_var_sw": "Yes",
+    "both_notified": "Yes",
+    "notify_explain": "",
+    "pcat_short": "NGS Panel",
+    "sweat_key": "1var",
+    "cluster": "2|NGS Panel|1var",
+    "source_tier": 0,
+    "source_label": "2025 CF NBS State Algorithm Data (Marci/Yvonne → K. Eilbeck)",
+    "source_url": "",
+    "notify_full": "Both PCP and CF specialist",
+    "source_note": "All fields sourced from Marci/Yvonne algorithm spreadsheet",
+    "panel_group": "C",
+    "reports": "Panel variants only — 153-variant list"
+  }
+];
+const GROUP_LABEL = {
+  'A':'A · CFTR2 (+) — full CFTR sequencing',
+  'B':'B · Panel → Sequencing (reflex to true sequencing)',
+  'C':'C · NGS Panel (predefined list)',
+  'D':'D · CFTR Panel, 39–75 variants',
+};
+const PSTYLE = {
+  'Panel Only':  {bg:'#1c2a1c',b:'#4ade80',t:'#86efac',s:'Panel Only'},
+  'NGS Panel':   {bg:'#1c2535',b:'#38bdf8',t:'#7dd3fc',s:'NGS Panel'},
+  'Panel→Seq':   {bg:'#2a2010',b:'#fb923c',t:'#fdba74',s:'Panel→Seq'},
+  'CFTR2(+)':    {bg:'#251535',b:'#c084fc',t:'#e9d5ff',s:'CFTR2(+)'},
+};
+const SSTYLE = {
+  '1var': {b:'#10b981',t:'#6ee7b7',l:'≥1 variant → sweat test'},
+  '2var': {b:'#f87171',t:'#fecaca',l:'≥2 variants → sweat test'},
+  'NS':   {b:'#d97706',t:'#fcd34d',l:'sweat criteria not specified'},
+};
+
+// Source tier colors for pill corner indicator
+const TIER_COL = {
+  0: '#475569',  // spreadsheet — gray
+  1: '#84cc16',  // Marci — lime
+  2: '#22d3ee',  // web-verified — cyan
+  3: '#d97706',  // unverified NS — amber
+};
+const TIER_ICON = {0:'■', 1:'★', 2:'🔗', 3:'⚠'};
+const TIER_LABEL = {
+  0: 'Source: 2025 CF NBS Algorithm Data (Marci/Yvonne → K. Eilbeck)',
+  1: 'Source: Marci (expert communication, 2025)',
+  2: 'Source: Web-verified (see link below)',
+  3: '⚠ Sweat test trigger not confirmed — awaiting primary source verification',
+};
+const TIER_BG = {0:'#141a24',1:'#141f0a',2:'#0a1a1e',3:'#1a1208'};
+const TIER_BORDER = {0:'#334155',1:'#4d7c0f',2:'#0e7490',3:'#92400e'};
+
+function matches(s, f) {
+  if (f==='all')      return true;
+  if (f==='2irt')     return s.samples===2;
+  if (f==='s1')       return s.sweat_key==='1var';
+  if (f==='s2')       return s.sweat_key==='2var';
+  if (f==='cftr2')    return s.pcat_short==='CFTR2(+)';
+  if (f==='ngs')      return s.pcat_short==='NGS Panel';
+  if (f==='pseq')     return s.pcat_short==='Panel→Seq';
+  if (f==='cfcenter') return s.both_notified==='Yes';
+  if (f==='ns')       return s.sweat_key==='NS';
+  if (f==='verified') return s.source_tier===2;
+  return true;
+}
+
+const SKEYS=[1,2], PKEYS=['Panel Only','NGS Panel','Panel→Seq','CFTR2(+)'], SWKEYS=['1var','2var','NS'];
+const clusters={};
+for(const s of STATES){
+  const k=s.cluster;
+  (clusters[k]=clusters[k]||[]).push(s);
+}
+const leaves=[];
+for(const sk of SKEYS) for(const pk of PKEYS) for(const swk of SWKEYS){
+  const k=`${sk}|${pk}|${swk}`;
+  if(clusters[k]) leaves.push({sk,pk,swk,states:clusters[k],k});
+}
+
+const PAD=16, LW=158, PILL_H=22, PILL_COLS=3, PILL_GAP=3, COL_GAP=12;
+const HDR=58, DW=170, DH=44, ROW_GAP=56;
+const R0=28, R1=R0+DH+ROW_GAP, R2=R1+DH+ROW_GAP, LEAF_TOP=R2+DH+ROW_GAP;
+
+function leafH(n){return HDR+Math.ceil(n/PILL_COLS)*(PILL_H+PILL_GAP)+8;}
+
+let curX=PAD+LW/2;
+const leafX={};
+for(const lf of leaves){leafX[lf.k]=curX;curX+=LW+COL_GAP;}
+const totalW=curX-COL_GAP+PAD;
+const totalH=LEAF_TOP+Math.max(...leaves.map(lf=>leafH(lf.states.length)))+32;
+
+const ip2X={};
+for(const sk of SKEYS) for(const pk of PKEYS){
+  const xs=leaves.filter(l=>l.sk===sk&&l.pk===pk).map(l=>leafX[l.k]);
+  if(xs.length) ip2X[`${sk}|${pk}`]=(Math.min(...xs)+Math.max(...xs))/2;
+}
+const ip1X={};
+for(const sk of SKEYS){
+  const xs=Object.entries(ip2X).filter(([k])=>k.startsWith(`${sk}|`)).map(([,v])=>v);
+  if(xs.length) ip1X[sk]=(Math.min(...xs)+Math.max(...xs))/2;
+}
+const rootX=totalW/2;
+
+const NS='http://www.w3.org/2000/svg';
+function el(tag,a={}){const e=document.createElementNS(NS,tag);for(const[k,v] of Object.entries(a))e.setAttribute(k,v);return e;}
+function tx(a,t){const e=el('text',a);e.textContent=t;return e;}
+let activeFilter='all';
+
+function draw(filter){
+  const svg=document.getElementById('svg');
+  while(svg.firstChild)svg.removeChild(svg.firstChild);
+  svg.setAttribute('viewBox',`0 0 ${totalW} ${totalH}`);
+  svg.setAttribute('width',totalW);svg.setAttribute('height',totalH);
+
+  const defs=el('defs');
+  [['a','#384060'],['ag','#10b981'],['ab','#3b82f6'],['ap','#d946ef']].forEach(([id,col])=>{
+    const mk=el('marker',{id,viewBox:'0 0 10 10',refX:'9',refY:'5',markerWidth:'5',markerHeight:'5',orient:'auto-start-reverse'});
+    mk.appendChild(el('path',{d:'M1 1L9 5L1 9',fill:'none',stroke:col,'stroke-width':'1.5','stroke-linecap':'round','stroke-linejoin':'round'}));
+    defs.appendChild(mk);
+  });
+  svg.appendChild(defs);
+  svg.appendChild(el('rect',{x:0,y:0,width:totalW,height:totalH,fill:'#141824'}));
+
+  function arrow(x1,y1,x2,y2,col,aid){return el('line',{x1,y1,x2,y2,stroke:col,'stroke-width':'1.4','marker-end':`url(#${aid})`});}
+
+  for(const[sk,x] of Object.entries(ip1X)) svg.appendChild(arrow(rootX,R0+DH,x,R1,'#10b981','ag'));
+  for(const[k,x] of Object.entries(ip2X)){
+    const sk=k.split('|')[0];
+    if(ip1X[sk]!==undefined) svg.appendChild(arrow(ip1X[sk],R1+DH,x,R2,'#3b82f6','ab'));
+  }
+  for(const lf of leaves){
+    const p2=ip2X[`${lf.sk}|${lf.pk}`];
+    if(p2!==undefined) svg.appendChild(arrow(p2,R2+DH,leafX[lf.k],LEAF_TOP,'#d946ef','ap'));
+  }
+
+  function decBox(cx,cy,label,sub,stroke,fill){
+    const g=el('g');
+    g.appendChild(el('rect',{x:cx-DW/2,y:cy,width:DW,height:DH,rx:'8',fill,stroke,'stroke-width':'1.8'}));
+    g.appendChild(tx({x:cx,y:cy+(sub?DH/2-6:DH/2),'text-anchor':'middle','dominant-baseline':'central','font-size':'12.5','font-weight':'700',fill:'#f1f5f9','font-family':'IBM Plex Sans,sans-serif'},label));
+    if(sub)g.appendChild(tx({x:cx,y:cy+DH/2+8,'text-anchor':'middle','dominant-baseline':'central','font-size':'9.5',fill:'#9ca3af','font-family':'IBM Plex Mono,monospace'},sub));
+    return g;
+  }
+  function badge(cx,cy,text,col){
+    const bx=cx+DW/2-38,by=cy+DH/2-7;
+    const g=el('g');
+    g.appendChild(el('rect',{x:bx,y:by,width:32,height:14,rx:'7',fill:col+'22',stroke:col,'stroke-width':'1'}));
+    g.appendChild(tx({x:bx+16,y:by+7,'text-anchor':'middle','dominant-baseline':'central','font-size':'8','font-weight':'700',fill:col,'font-family':'IBM Plex Mono,monospace'},text));
+    return g;
+  }
+
+  svg.appendChild(decBox(rootX,R0,'IRT blood spot','24–48 h after birth','#60a5fa','#0f1a2a'));
+
+  for(const[sk,x] of Object.entries(ip1X)){
+    const isSk2=parseInt(sk)===2;
+    const label=isSk2?'2 IRT samples':'1 IRT sample';
+    const sub=isSk2?'Sample 1: 24–48h → Sample 2: 7–14 days (well-baby)':'Single sample at 24–48h';
+    const stroke=isSk2?'#06b6d4':'#10b981';
+    const fill=isSk2?'#091a22':'#091a0f';
+    svg.appendChild(decBox(x,R1,label,sub,stroke,fill));
+    svg.appendChild(badge(x,R1,'IP1','#10b981'));
+  }
+
+  for(const[k,x] of Object.entries(ip2X)){
+    const pk=k.split('|').slice(1).join('|');
+    const ps=PSTYLE[pk]||PSTYLE['Panel Only'];
+    svg.appendChild(decBox(x,R2,ps.s,null,ps.b,ps.bg));
+    svg.appendChild(badge(x,R2,'IP2','#3b82f6'));
+  }
+
+  for(const lf of leaves){
+    const lx=leafX[lf.k];
+    const ps=PSTYLE[lf.pk]||PSTYLE['Panel Only'];
+    const ss=SSTYLE[lf.swk];
+    const n=lf.states.length, h=leafH(n);
+    const allDim=lf.states.every(s=>!matches(s,filter));
+    const op=allDim?'0.1':'1';
+
+    svg.appendChild(el('rect',{x:lx-LW/2,y:LEAF_TOP,width:LW,height:h,rx:'8',fill:'#141824',stroke:ps.b,'stroke-width':'1.3',opacity:op}));
+    svg.appendChild(el('rect',{x:lx-LW/2,y:LEAF_TOP,width:LW,height:HDR,rx:'8',fill:ps.bg,opacity:op}));
+    svg.appendChild(el('rect',{x:lx-LW/2,y:LEAF_TOP+HDR-7,width:LW,height:8,fill:ps.bg,opacity:op}));
+    svg.appendChild(el('line',{x1:lx-LW/2,y1:LEAF_TOP+HDR,x2:lx+LW/2,y2:LEAF_TOP+HDR,stroke:ps.b,'stroke-width':'0.8',opacity:op}));
+    svg.appendChild(el('rect',{x:lx-LW/2+1,y:LEAF_TOP+36,width:LW-2,height:20,fill:ss.b+'28',opacity:op}));
+    svg.appendChild(tx({x:lx,y:LEAF_TOP+16,'text-anchor':'middle','dominant-baseline':'central','font-size':'11','font-weight':'700',fill:ps.t,'font-family':'IBM Plex Sans,sans-serif',opacity:op},ps.s));
+    svg.appendChild(tx({x:lx,y:LEAF_TOP+46,'text-anchor':'middle','dominant-baseline':'central','font-size':'9',fill:ss.t,'font-family':'IBM Plex Mono,monospace',opacity:op},ss.l));
+    svg.appendChild(el('rect',{x:lx+LW/2-34,y:LEAF_TOP+4,width:28,height:13,rx:'6',fill:'#d946ef22',stroke:'#d946ef','stroke-width':'1',opacity:op}));
+    svg.appendChild(tx({x:lx+LW/2-20,y:LEAF_TOP+10.5,'text-anchor':'middle','dominant-baseline':'central','font-size':'8','font-weight':'700',fill:'#f0abfc','font-family':'IBM Plex Mono,monospace',opacity:op},'IP3'));
+    svg.appendChild(tx({x:lx-LW/2+5,y:LEAF_TOP+10,'text-anchor':'start','dominant-baseline':'central','font-size':'8','font-weight':'600',fill:ps.t,'font-family':'IBM Plex Mono,monospace',opacity:op},`n=${n}`));
+
+    const pw=(LW-14)/PILL_COLS;
+    for(let i=0;i<lf.states.length;i++){
+      const s=lf.states[i];
+      const col=i%PILL_COLS, row=Math.floor(i/PILL_COLS);
+      const px=lx-LW/2+7+col*pw, py=LEAF_TOP+HDR+4+row*(PILL_H+PILL_GAP);
+      const dim=!matches(s,filter);
+      const pop=dim?'0.1':'1';
+      const tierCol=TIER_COL[s.source_tier];
+
+      // Pill background
+      svg.appendChild(el('rect',{x:px,y:py,width:pw-2,height:PILL_H,rx:'4',fill:ps.bg,stroke:ps.b,'stroke-width':'1',opacity:pop}));
+
+      // Source tier indicator — small colored square in top-left corner of pill
+      svg.appendChild(el('rect',{x:px+1,y:py+1,width:5,height:5,rx:'1.5',fill:tierCol,opacity:pop}));
+
+      // CF center dot (indigo) — right side
+      let dotX=px+pw-7;
+      if(s.both_notified==='Yes'){
+        svg.appendChild(el('circle',{cx:dotX,cy:py+PILL_H/2,r:'3.5',fill:'#818cf8',opacity:pop}));
+        dotX-=9;
+      }
+      // 2nd IRT dot (cyan)
+      if(s.samples===2){
+        svg.appendChild(el('circle',{cx:dotX,cy:py+PILL_H/2,r:'3.5',fill:'#06b6d4',opacity:pop}));
+      }
+
+      svg.appendChild(tx({x:px+(pw-2)/2,y:py+PILL_H/2,'text-anchor':'middle','dominant-baseline':'central','font-size':'10','font-weight':'700',fill:ps.t,'font-family':'IBM Plex Mono,monospace',opacity:pop},s.abbr));
+
+      const hit=el('rect',{x:px,y:py,width:pw-2,height:PILL_H,rx:'4',fill:'transparent',style:'cursor:pointer'});
+      (function(state){
+        hit.addEventListener('mouseenter',ev=>showTT(ev,state));
+        hit.addEventListener('mouseleave',hideTT);
+        hit.addEventListener('mousemove',moveTT);
+      })(s);
+      svg.appendChild(hit);
+    }
+  }
+}
+
+function showTT(ev,s){
+  const tt=document.getElementById('tt');
+  const ps=PSTYLE[s.pcat_short]||PSTYLE['Panel Only'];
+  const ss=SSTYLE[s.sweat_key];
+  const tier=s.source_tier;
+  const tierCol=TIER_COL[tier];
+
+  const srcHtml = s.source_url
+    ? `<a href="${s.source_url}" target="_blank" rel="noopener">${s.source_label} ↗</a>`
+    : s.source_label;
+
+  const srcNote = s.source_note || '';
+
+  tt.innerHTML=`
+    <div class="ts">${s.abbr}</div>
+    <div class="tsub">${s.archetype}</div>
+    <hr class="td">
+    <div class="tip" style="color:#6ee7b7">▸ IP1 — IRT Screening</div>
+    <div class="tr"><span class="tk">Blood spots</span><span class="tv">${s.irt_desc}</span></div>
+    ${s.vhirt_note?`<div class="tr"><span class="tk">VHIRT</span><span class="tv" style="color:#f9a8d4">${s.vhirt_note}</span></div>`:''}
+    <hr class="td">
+    <div class="tip" style="color:#93c5fd">▸ IP2 — DNA Panel</div>
+    <div class="tr"><span class="tk">Category</span><span class="tv" style="color:${ps.t}">${GROUP_LABEL[s.panel_group]||s.pcat}</span></div>
+    <div class="tr"><span class="tk">Tested on</span><span class="tv">${s.dna_blood}</span></div>
+    <div class="tr"><span class="tk">Panel</span><span class="tv" style="color:${ps.t}">${(s.dna_desc||'').replace(/\n/g,'<br>')}</span></div>
+    <div class="tr"><span class="tk">Reports</span><span class="tv">${s.reports||'Panel variants only'}</span></div>
+    <hr class="td">
+    <div class="tip" style="color:#f0abfc">▸ IP3 — Sweat Test Trigger</div>
+    <div class="tr"><span class="tk">Referred if</span><span class="tv" style="color:${ss.t}">${s.sweat}</span></div>
+    <hr class="td">
+    <div class="tip" style="color:#e2e8f0">▸ Communication</div>
+    <div class="tr">
+      <span class="tk">Results to family</span>
+      <span class="tv">Pediatrician / PCP<br>
+      <span style="font-size:9px;color:#5a6480">Source: Marci (expert communication, 2025)</span></span>
+    </div>
+    <div class="tr">
+      <span class="tk">CF center notified</span>
+      <span class="tv">${s.notify_full||'See source'}<br>
+      <span style="font-size:9px;color:#5a6480">Source: Marci/Yvonne algorithm spreadsheet (2025)</span></span>
+    </div>
+    <div class="tr">
+      <span class="tk">Sweat test scheduled by</span>
+      <span class="tv">PCP referral to CF center<br>
+      <span style="font-size:9px;color:#5a6480">Source: Marci (expert communication, 2025)</span></span>
+    </div>
+    <hr class="td">
+    <div class="tehr">⚠ EHR challenge: ${s.ehr_note}</div>
+    <div style="margin-top:6px">
+      ${s.both_notified==='Yes'?'<span class="tb" style="background:#1a1535;border-color:#818cf8;color:#c7d2fe">◆ CF center notified</span>':''}
+      ${s.samples===2?'<span class="tb" style="background:#0f1e2a;border-color:#06b6d4;color:#67e8f9">● 2nd IRT: 7–14 days</span>':''}
+    </div>
+    <div class="tsrc" style="background:${TIER_BG[tier]};border-color:${TIER_BORDER[tier]};color:${tierCol}">
+      ${TIER_ICON[tier]} <strong>${srcNote}</strong><br>${srcHtml}
+    </div>`;
+  tt.style.display='block';
+  moveTT(ev);
+}
+function moveTT(ev){
+  const tt=document.getElementById('tt');
+  let l=ev.clientX+15,t=ev.clientY-16;
+  if(l+330>window.innerWidth)l=ev.clientX-330-15;
+  if(t+480>window.innerHeight)t=ev.clientY-480;
+  tt.style.left=l+'px';tt.style.top=t+'px';
+}
+function hideTT(){document.getElementById('tt').style.display='none';}
+
+document.querySelectorAll('.fb').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.fb').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    activeFilter=b.dataset.f;
+    draw(activeFilter);
+  });
+});
+
+draw('all');
+</script>
+</body>
+</html>
