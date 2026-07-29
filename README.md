@@ -24,4 +24,4 @@ This is a working draft and parts of it likely incorrect. If your state is misre
 The largest challenge moving forward will be reporting testing an workflow changes. Encouraging states' individual resposibility to report said changes will make the bot development process and maintenance much easier.
 ## Source
 
-Primary data: *2025 State-Specific CF NBS Algorithms*, compiled by Marci and Yvonne for K. Eilbeck. Web-verified states link to their sources directly in the tooltip.
+Primary data: *2025 State-Specific CF NBS Algorithms*, compiled by Marci Sontag, Yvonne Keller-Guenther, and Karen Eilbeck. Web-verified states link to their sources directly in the tooltip.
