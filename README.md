@@ -26,5 +26,3 @@ The largest challenge moving forward will be reporting testing an workflow chang
 
 Primary data: *2025 State-Specific CF NBS Algorithms*, compiled by Marci Sontag, Yvonne Keller-Guenther, and Karen Eilbeck. Web-verified states link to their sources directly in the tooltip.
 
-Links:
-https://chatbot2.bmi.utah.edu/ubot/chatapp/chatbot-kimcopy2?initialIntent=introduction-start-ip1-9528a818-c520-4f3b-926f-975b7787a4e5&profile=UT
